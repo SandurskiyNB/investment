@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Личный кабинет</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 50px; }
+        .container { background: white; padding: 30px; border-radius: 8px; max-width: 600px; margin: auto; text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1);}
+        /* Делаем ссылки похожими на большие кнопки */
+        .menu-btn { 
+            display: inline-block; 
+            width: 45%; 
+            padding: 20px 0; 
+            margin: 10px 2%; 
+            background-color: #e6f2ff; 
+            text-decoration: none; 
+            color: #000; 
+            font-weight: bold; 
+            border-radius: 8px; 
+            border: 1px solid #b3d7ff;
+            box-sizing: border-box; /* Чтобы padding не ломал ширину */
+        }
+        .menu-btn:hover { background-color: #cce5ff; }
+        .logout { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .logout:hover { background-color: #f5c6cb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Личный кабинет</h2>
+        <!-- Имя пользователя подставляется сервером -->
+        <p style="font-size: 18px;">Добро пожаловать, <b>{{ username }}</b></p>
+        
+        <div style="margin-top: 30px;">
+            <!-- ИСПРАВЛЕННЫЕ ССЫЛКИ -->
+            <a href="/survey" class="menu-btn">📊 По риск-профилю</a>
+            <a href="/catalog" class="menu-btn">🛠 Ручной выбор</a>
+            
+            <!-- Ссылку на историю добавим чуть позже, когда сделаем экран -->
+            <a href="/history" class="menu-btn">📜 История портфелей</a>
+            
+            <a href="/logout" class="menu-btn logout">Выйти</a>
+        </div>
+    </div>
+</body>
+</html>

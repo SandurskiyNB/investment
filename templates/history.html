@@ -1,0 +1,67 @@
+<!-- Файл: templates/history.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>История портфелей</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 50px; }
+        .container { background: white; padding: 30px; border-radius: 8px; max-width: 900px; margin: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #0078D7; color: white; }
+        .success { color: white; text-align: center; padding: 10px; background-color: #28A745; border-radius: 4px; margin-bottom: 20px;}
+        .empty-msg { text-align: center; color: #666; padding: 20px; font-style: italic; }
+        .btn-menu { display: block; width: 100%; padding: 12px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; text-align: center; margin-top: 30px; font-weight: bold; }
+        
+        /* Стили для кнопок в таблице */
+        .action-btns { display: flex; gap: 10px; }
+        .btn-view { background-color: #17a2b8; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
+        .btn-delete { background-color: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
+        .btn-view:hover { background-color: #138496; }
+        .btn-delete:hover { background-color: #c82333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>📜 История инвестиционных планов</h2>
+        
+        {% if success_msg %}
+            <div class="success">{{ success_msg }}</div>
+        {% endif %}
+
+        {% if history %}
+            <table>
+                <tr>
+                    <th>Название / Стратегия</th>
+                    <th>Состав активов</th>
+                    <th>Дата создания</th>
+                    <th>Действия</th>
+                </tr>
+                {% for port in history %}
+                <tr>
+                    <td><b>{{ port.name }}</b></td>
+                    <td style="font-size: 13px;">{{ port.assets_list }}</td>
+                    <td>{{ port.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                    <td class="action-btns">
+                        <!-- Кнопка ПРОСМОТР -->
+                        <form action="/view_portfolio/{{ port.id }}" method="GET" style="margin:0;">
+                            <button type="submit" class="btn-view">👁 Просмотр</button>
+                        </form>
+                        
+                        <!-- Кнопка УДАЛИТЬ -->
+                        <form action="/delete_portfolio/{{ port.id }}" method="POST" style="margin:0;" onsubmit="return confirm('Вы уверены, что хотите удалить этот расчёт?');">
+                            <button type="submit" class="btn-delete">❌ Удалить</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            <div class="empty-msg">Список сохранённых портфелей пуст</div>
+        {% endif %}
+
+        <a href="/dashboard" class="btn-menu">🏠 Вернуться в личный кабинет</a>
+    </div>
+</body>
+</html>

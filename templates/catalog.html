@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Каталог активов</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 30px; }
+        .container { background: white; padding: 30px; border-radius: 8px; max-width: 800px; margin: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .search-box { width: 100%; padding: 15px; font-size: 16px; border: 2px solid #0078D7; border-radius: 6px; box-sizing: border-box; margin-bottom: 20px; }
+        .asset-list { border: 1px solid #ccc; border-radius: 4px; max-height: 500px; overflow-y: auto; background-color: #fafafa; padding: 10px; }
+        .category { color: #333; background-color: #e9ecef; padding: 10px; margin: 10px 0 5px 0; border-radius: 4px; font-size: 14px; position: sticky; top: 0; }
+        .asset-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #eee; background-color: white; cursor: pointer; transition: background-color 0.2s; }
+        .asset-item:hover { background-color: #f0f8ff; }
+        .asset-item span { font-size: 15px; }
+        .asset-item b { color: #0055bb; display: inline-block; width: 80px; }
+        input[type="checkbox"] { transform: scale(1.3); cursor: pointer; }
+        button.submit-btn { width: 100%; padding: 15px; background-color: #0078D7; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 18px; font-weight: bold; margin-top: 20px; transition: background-color 0.2s;}
+        button.submit-btn:hover { background-color: #0056b3; }
+        .back-link { display: block; margin-top: 20px; text-align: center; color: #6c757d; text-decoration: none; }
+        .error { color: white; background-color: #dc3545; padding: 15px; border-radius: 4px; text-align: center; margin-bottom: 20px; font-weight: bold;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🛠 Экспертный режим (конструктор портфеля)</h2>
+        <p>Выберите минимум 2 актива из каталога для проведения математической оптимизации</p>
+
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <!-- ЖИВОЙ ПОИСК -->
+        <input type="text" id="searchInput" class="search-box" onkeyup="filterAssets()" placeholder="🔍 Введите тикер или название...">
+
+        <form method="POST" action="/process_catalog">
+            
+            <div class="asset-list">
+                <!-- КАТЕГОРИЯ: ИНДЕКСНЫЕ ФОНДЫ (ETF) -->
+                <div class="category">ИНДЕКСНЫЕ ФОНДЫ (Глобальный рынок)</div>
+                <label class="asset-item"><span><b>SPY</b> SPDR S&P 500 ETF (Акции США)</span> <input type="checkbox" name="assets" value="SPY"></label>
+                <label class="asset-item"><span><b>QQQ</b> Invesco QQQ Trust (Технологии США)</span> <input type="checkbox" name="assets" value="QQQ"></label>
+                <label class="asset-item"><span><b>DIA</b> SPDR Dow Jones Industrial Average</span> <input type="checkbox" name="assets" value="DIA"></label>
+                <label class="asset-item"><span><b>EEM</b> iShares MSCI Emerging Markets (Развивающиеся страны)</span> <input type="checkbox" name="assets" value="EEM"></label>
+                <label class="asset-item"><span><b>URTH</b> iShares MSCI World (Глобальные акции)</span> <input type="checkbox" name="assets" value="URTH"></label>
+                <label class="asset-item"><span><b>VGK</b> Vanguard FTSE Developed Markets</span> <input type="checkbox" name="assets" value="VGK"></label>
+
+                <!-- КАТЕГОРИЯ: ЗАЩИТНЫЕ АКТИВЫ (ETF) -->
+                <div class="category">ОБЛИГАЦИИ И СЫРЬЕ (Защитные активы)</div>
+                <label class="asset-item"><span><b>TLT</b> iShares 20+ Year Treasury Bond (Гособлигации США 20+ лет)</span> <input type="checkbox" name="assets" value="TLT"></label>
+                <label class="asset-item"><span><b>IEF</b> iShares Core US Aggregate Bond (Сводный рынок облигаций)</span> <input type="checkbox" name="assets" value="IEF"></label>
+                <label class="asset-item"><span><b>SHY</b> iShares 1-3 Year Treasury Bond (Краткосрочные облигации)</span> <input type="checkbox" name="assets" value="SHY"></label>
+                <label class="asset-item"><span><b>LQD</b> iShares iBoxx $ Investment Grade Corporate Bond</span> <input type="checkbox" name="assets" value="LQD"></label>
+                <label class="asset-item"><span><b>GLD</b> SPDR Gold Shares (Золото физическое)</span> <input type="checkbox" name="assets" value="GLD"></label>
+                <label class="asset-item"><span><b>SLV</b> iShares Silver Trust (Серебро)</span> <input type="checkbox" name="assets" value="SLV"></label>
+                <label class="asset-item"><span><b>USO</b> United States Oil Fund (Нефть)</span> <input type="checkbox" name="assets" value="USO"></label>
+                <label class="asset-item"><span><b>VNQ</b> Vanguard Real Estate ETF (Недвижимость США)</span> <input type="checkbox" name="assets" value="VNQ"></label>
+
+                <!-- КАТЕГОРИЯ: ТЕХНОЛОГИИ (IT) -->
+                <div class="category">АКЦИИ: ТЕХНОЛОГИЧЕСКИЙ СЕКТОР (IT)</div>
+                <label class="asset-item"><span><b>AAPL</b> Apple Inc.</span> <input type="checkbox" name="assets" value="AAPL"></label>
+                <label class="asset-item"><span><b>MSFT</b> Microsoft Corporation</span> <input type="checkbox" name="assets" value="MSFT"></label>
+                <label class="asset-item"><span><b>GOOGL</b> Alphabet Inc. (Google)</span> <input type="checkbox" name="assets" value="GOOGL"></label>
+                <label class="asset-item"><span><b>AMZN</b> Amazon.com, Inc.</span> <input type="checkbox" name="assets" value="AMZN"></label>
+                <label class="asset-item"><span><b>NVDA</b> NVIDIA Corporation</span> <input type="checkbox" name="assets" value="NVDA"></label>
+                <label class="asset-item"><span><b>TSLA</b> Tesla, Inc.</span> <input type="checkbox" name="assets" value="TSLA"></label>
+                <label class="asset-item"><span><b>META</b> Meta Platforms, Inc. (Facebook)</span> <input type="checkbox" name="assets" value="META"></label>
+                <label class="asset-item"><span><b>NFLX</b> Netflix, Inc.</span> <input type="checkbox" name="assets" value="NFLX"></label>
+                <label class="asset-item"><span><b>INTC</b> Intel Corporation</span> <input type="checkbox" name="assets" value="INTC"></label>
+                <label class="asset-item"><span><b>AMD</b> Advanced Micro Devices, Inc.</span> <input type="checkbox" name="assets" value="AMD"></label>
+                <label class="asset-item"><span><b>CSCO</b> Intel Corporation</span> <input type="checkbox" name="assets" value="CSCO"></label>
+                <label class="asset-item"><span><b>CRM</b> Salesforce, Inc.</span> <input type="checkbox" name="assets" value="CRM"></label>
+                <label class="asset-item"><span><b>ORCL</b> Cisco Systems, Inc.</span> <input type="checkbox" name="assets" value="ORCL"></label>
+
+                <!-- КАТЕГОРИЯ: ФИНАНСЫ И ПОТРЕБИТЕЛЬСКИЙ СЕКТОР -->
+                <div class="category">АКЦИИ: ФИНАНСЫ И ПОТРЕБИТЕЛЬСКИЙ СЕКТОР</div>
+                <label class="asset-item"><span><b>V</b> Visa Inc.</span> <input type="checkbox" name="assets" value="V"></label>
+                <label class="asset-item"><span><b>MA</b> Mastercard Incorporated</span> <input type="checkbox" name="assets" value="MA"></label>
+                <label class="asset-item"><span><b>JPM</b> JPMorgan Chase & Co.</span> <input type="checkbox" name="assets" value="JPM"></label>
+                <label class="asset-item"><span><b>BAC</b> Bank of America Corp</span> <input type="checkbox" name="assets" value="BAC"></label>
+                <label class="asset-item"><span><b>WMT</b> Walmart Inc.</span> <input type="checkbox" name="assets" value="WMT"></label>
+                <label class="asset-item"><span><b>KO</b> The Coca-Cola Company</span> <input type="checkbox" name="assets" value="KO"></label>
+                <label class="asset-item"><span><b>PEP</b> PepsiCo, Inc.</span> <input type="checkbox" name="assets" value="PEP"></label>
+                <label class="asset-item"><span><b>MCD</b> McDonald's Corporation</span> <input type="checkbox" name="assets" value="MCD"></label>
+                <label class="asset-item"><span><b>DIS</b> The Walt Disney Company</span> <input type="checkbox" name="assets" value="DIS"></label>
+
+                <!-- КАТЕГОРИЯ: РОССИЙСКИЙ РЫНОК -->
+                <div class="category">АКЦИИ: РОССИЙСКИЙ РЫНОК (MOEX)</div>
+                <label class="asset-item"><span><b>SBER.ME</b> Сбербанк России</span> <input type="checkbox" name="assets" value="SBER.ME"></label>
+                <label class="asset-item"><span><b>GAZP.ME</b> Газпром</span> <input type="checkbox" name="assets" value="GAZP.ME"></label>
+                <label class="asset-item"><span><b>LKOH.ME</b> ЛУКОЙЛ</span> <input type="checkbox" name="assets" value="LKOH.ME"></label>
+                <label class="asset-item"><span><b>YNDX.ME</b> Яндекс</span> <input type="checkbox" name="assets" value="YNDX.ME"></label>
+                <label class="asset-item"><span><b>ROSN.ME</b> Роснефть</span> <input type="checkbox" name="assets" value="ROSN.ME"></label>
+                <label class="asset-item"><span><b>NVTK.ME</b> НОВАТЭК</span> <input type="checkbox" name="assets" value="NVTK.ME"></label>
+                <label class="asset-item"><span><b>TCSG.ME</b> ТКС Холдинг (Тинькофф)</span> <input type="checkbox" name="assets" value="TCSG.ME"></label>
+                <label class="asset-item"><span><b>MGNT.ME</b> Магнит</span> <input type="checkbox" name="assets" value="MGNT.ME"></label>
+
+                <!-- КАТЕГОРИЯ: КРИПТОВАЛЮТЫ -->
+                <div class="category">КРИПТОВАЛЮТЫ (Высокий риск)</div>
+                <label class="asset-item"><span><b>BTC-USD</b> Bitcoin</span> <input type="checkbox" name="assets" value="BTC-USD"></label>
+                <label class="asset-item"><span><b>ETH-USD</b> Ethereum</span> <input type="checkbox" name="assets" value="ETH-USD"></label>
+                <label class="asset-item"><span><b>BNB-USD</b> BNB</span> <input type="checkbox" name="assets" value="BNB-USD"></label>
+                <label class="asset-item"><span><b>SOL-USD</b> Solana</span> <input type="checkbox" name="assets" value="SOL-USD"></label>
+                <label class="asset-item"><span><b>XRP-USD</b> XRP</span> <input type="checkbox" name="assets" value="XRP-USD"></label>
+            </div>
+            <!-- ДОБАВЛЕНО ПОЛЕ СУММЫ -->
+            <div class="custom-input" style="margin-bottom: 20px; padding: 10px;">
+                <label><b>Сумма инвестиций (руб.):</b></label>
+                <input type="number" name="amount" min="100" value="10000" style="font-size: 16px;">
+            </div>
+            <button type="submit" class="submit-btn">🚀 Запустить оптимизацию</button>
+        </form>
+
+        <a href="/dashboard" class="back-link">🏠 Вернуться в личный кабинет</a>
+    </div>
+
+    <!-- СКРИПТ ЖИВОГО ПОИСКА -->
+    <script>
+    function filterAssets() {
+        let input = document.getElementById('searchInput').value.toLowerCase();
+        let items = document.getElementsByClassName('asset-item');
+
+        for (let i = 0; i < items.length; i++) {
+            let text = items[i].innerText.toLowerCase();
+            if (text.includes(input)) {
+                items[i].style.display = "";
+            } else {
+                items[i].style.display = "none";
+            }
+        }
+    }
+    </script>
+</body>
+</html>

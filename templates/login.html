@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Вход</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 300px; text-align: center; }
+        input { width: 90%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; }
+        button { width: 100%; padding: 10px; background-color: #0078D7; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button.reg-btn { background-color: #28A745; margin-top: 10px; }
+        .error { color: red; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Вход в ИС ОРИ</h2>
+        
+        <!-- Место для показа ошибок от сервера -->
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+
+        <!-- Форма отправляет данные методом POST на сервер -->
+        <form method="POST" action="/login">
+            <input type="text" name="username" placeholder="Логин" required>
+            <input type="password" name="password" placeholder="Пароль" required>
+            <button type="submit">Войти</button>
+            <!-- Кнопка регистрации отправляет на другой URL -->
+            <button type="submit" formaction="/register" class="reg-btn">Зарегистрироваться</button>
+        </form>
+    </div>
+</body>
+</html>

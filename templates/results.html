@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Результаты оптимизации</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+        .container { background: white; padding: 30px; border-radius: 12px; max-width: 1000px; margin: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .header { border-bottom: 2px solid #e1e4e8; padding-bottom: 15px; margin-bottom: 20px; text-align: center; }
+        h2 { color: #1a73e8; margin: 0; }
+        .strategy-badge { display: inline-block; background: #e8f0fe; color: #1967d2; padding: 5px 15px; border-radius: 20px; font-weight: bold; margin-top: 10px; }
+
+        .content-grid { display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; }
+        .chart-box { flex: 1; min-width: 300px; max-width: 350px; }
+        .table-box { flex: 2; min-width: 500px; }
+
+        .amount-summary { background-color: #ffffff; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .amount-val { font-size: 20px; font-weight: bold; color: #28a745; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { padding: 10px; border: 1px solid #dee2e6; text-align: left; }
+        th { background-color: #f8f9fa; color: #5f6368; font-size: 12px; text-transform: uppercase; }
+        
+        .ticker-name { color: #1a73e8; font-weight: bold; font-size: 15px; }
+        .money-cell { font-family: 'Consolas', monospace; color: #333; }
+        .return-cell { color: #155724; font-weight: 500; }
+        .risk-cell { color: #721c24; }
+
+        .total-card { margin-top: 20px; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #0078D7; display: flex; justify-content: space-around; text-align: center; }
+        .total-stat-item h5 { margin: 0 0 5px 0; color: #666; text-transform: uppercase; font-size: 12px; }
+        .total-stat-item p { margin: 0; font-size: 18px; font-weight: bold; color: #1a73e8; }
+
+        .actions { margin-top: 25px; display: flex; flex-direction: column; gap: 10px; }
+        .btn { display: block; padding: 12px; text-align: center; text-decoration: none; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; }
+        .btn-save { background-color: #28a745; color: white; }
+        .btn-menu { background-color: #6c757d; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>Математический анализ портфеля</h2>
+        <div class="strategy-badge">{{ profile_name }}</div>
+    </div>
+
+    <div class="content-grid">
+        <!-- Визуализация -->
+        <div class="chart-box">
+            <canvas id="portfolioChart"></canvas>
+            <p style="text-align: center; font-size: 12px; color: #888; margin-top: 15px;">Распределение весов активов</p>
+        </div>
+
+        <!-- Таблица с деталями -->
+        <div class="table-box">
+            <div class="amount-summary">
+                <span>Бюджет инвестиций:</span>
+                <span class="amount-val">{{ "{:,.2f}".format(total_amount) }} ₽</span>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Актив</th>
+                        <th>Доля</th>
+                        <th>Доходность за год</th>
+                        <th>Риск</th>
+                        <th>Сумма покупки</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ticker, data in assets.items() %}
+                    <tr>
+                        <td><span class="ticker-name">{{ ticker }}</span></td>
+                        <td>{{ data.weight }}%</td>
+                        <td class="return-cell">{{ data.return_pct }}% ({{ "{:,.2f}".format(data.return_money) }} ₽)</td>
+                        <td class="risk-cell">{{ data.risk }}%</td>
+                        <td class="money-cell">{{ "{:,.2f}".format(data.money_invested) }} ₽</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- ИТОГИ ПОРТФЕЛЯ -->
+            <div class="total-card">
+                <div class="total-stat-item">
+                    <h5>Ожидаемая доходность за год</h5>
+                    <p>{{ portfolio_stats.return }}% ({{ "{:,.2f}".format(total_profit_money) }} ₽)</p>
+                </div>
+                <div class="total-stat-item">
+                    <h5>Риск (Волатильность)</h5>
+                    <p style="color: #dc3545;">{{ portfolio_stats.risk }}%</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="actions">
+        {% if not hide_save_button %}
+            <form method="POST" action="/save_portfolio">
+                <button type="submit" class="btn btn-save">💾 Сохранить этот расчет в историю</button>
+            </form>
+        {% endif %}
+        <a href="/dashboard" class="btn btn-menu">🏠 Вернуться в личный кабинет</a>
+    </div>
+</div>
+
+<script>
+    const labels = [{% for ticker in assets.keys() %} "{{ ticker }}", {% endfor %}];
+    const weights = [{% for item in assets.values() %} {{ item.weight }}, {% endfor %}];
+
+    new Chart(document.getElementById('portfolioChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: weights,
+                backgroundColor: ['#4285F4', '#34A853', '#FBBC05', '#EA4335', '#8E44AD', '#2C3E50', '#16A085', '#E67E22'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+</script>
+
+</body>
+</html>
