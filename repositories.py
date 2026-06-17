@@ -1,11 +1,21 @@
 # Файл: repositories.py
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models import User, Portfolio, OptimalAllocation, Base
 
 class UserRepository:
     def __init__(self):
-        self.DATABASE_URI = "postgresql://postgres:password@localhost:5432/investment_db"
+        # Получаем URL базы данных из переменных окружения (для Render)
+        db_url = os.environ.get("DATABASE_URL")
+        
+        # Исправляем формат ссылки (Render дает postgres://, а SQLAlchemy требует postgresql://)
+        if db_url and db_url.startswith("postgres://"):
+            db_url = db_url.replace("postgres://", "postgresql://", 1)
+            
+        # Если мы в облаке — используем db_url, если дома — локальную строку
+        self.DATABASE_URI = db_url or "postgresql://postgres:pass@localhost:5432/investment_db"
+        
         self.engine = create_engine(self.DATABASE_URI)
         Base.metadata.create_all(bind=self.engine)
         self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
@@ -29,17 +39,21 @@ class UserRepository:
 
 class PortfolioRepository:
     def __init__(self):
-        self.DATABASE_URI = "postgresql://postgres:password@localhost:5432/investment_db"
+        # Аналогичная логика для репозитория портфелей
+        db_url = os.environ.get("DATABASE_URL")
+        if db_url and db_url.startswith("postgres://"):
+            db_url = db_url.replace("postgres://", "postgresql://", 1)
+            
+        self.DATABASE_URI = db_url or "postgresql://postgres:pass@localhost:5432/investment_db"
+        
         self.engine = create_engine(self.DATABASE_URI)
         self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
 
     def save_portfolio_with_allocation(self, user_id: int, name: str, profile: str, 
                                        assets: list, amount: float, weights: dict, 
                                        ret: float, risk: float):
-        """Сохраняет сразу обе записи: и сам портфель, и расчет для него."""
         session = self.SessionLocal()
         try:
-            # 1. Создаем портфель
             new_portfolio = Portfolio(
                 user_id=user_id,
                 name=name,
@@ -48,10 +62,9 @@ class PortfolioRepository:
                 investment_amount=amount
             )
             session.add(new_portfolio)
-            session.commit() # Сохраняем, чтобы получить id
+            session.commit()
             session.refresh(new_portfolio)
 
-            # 2. Создаем расчет (аллокацию), привязанный к этому портфелю
             allocation = OptimalAllocation(
                 portfolio_id=new_portfolio.id,
                 weights_matrix=weights,
@@ -70,22 +83,15 @@ class PortfolioRepository:
             session.close()
 
     def get_user_history(self, user_id: int):
-        """Получает историю портфелей для пользователя."""
         session = self.SessionLocal()
         try:
-            # Возвращаем список объектов Portfolio
             return session.query(Portfolio).filter(Portfolio.user_id == user_id).order_by(Portfolio.created_at.desc()).all()
         finally:
             session.close()
 
     def get_portfolio_by_id(self, portfolio_id: int, user_id: int):
-        """
-        ИСПРАВЛЕНИЕ: Возвращает портфель и его самую свежую аллокацию.
-        Проверяет, что портфель принадлежит именно этому пользователю.
-        """
         session = self.SessionLocal()
         try:
-            # Ищем портфель
             portfolio = session.query(Portfolio).filter(
                 Portfolio.id == portfolio_id, 
                 Portfolio.user_id == user_id
@@ -94,7 +100,6 @@ class PortfolioRepository:
             if not portfolio:
                 return None, None
                 
-            # Ищем последнюю аллокацию для этого портфеля
             allocation = session.query(OptimalAllocation).filter(
                 OptimalAllocation.portfolio_id == portfolio_id
             ).order_by(OptimalAllocation.calculated_at.desc()).first()
@@ -104,7 +109,6 @@ class PortfolioRepository:
             session.close()
 
     def delete_portfolio(self, portfolio_id: int, user_id: int) -> bool:
-        """Удаляет портфель (аллокации удалятся каскадно)."""
         session = self.SessionLocal()
         try:
             portfolio = session.query(Portfolio).filter(
